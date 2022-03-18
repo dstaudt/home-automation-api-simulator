@@ -20,6 +20,20 @@
          ],
          "jinja": true,
          "justMyCode": true
+      },
+      {
+         "name": "Python: Gunicorn",
+         "type": "python",
+         "request": "launch",
+         "module": "gunicorn",
+         "env": { },
+         "args": [
+            "-w 4",
+            "-b 0.0.0.0:5000",
+            "wsgi:app"
+         ],
+         "jinja": true,
+         "justMyCode": true
       }
    ]
 }
