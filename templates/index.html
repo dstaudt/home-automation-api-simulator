@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+   <meta charset="utf-8" />
+   <script>
+      var control_state = {{ control_state| safe }};
+      var deviceId = "{{ deviceId|safe }}";
+   </script>
+   <script src="static/index.js"></script>
+   <link rel='stylesheet' href='static/style.css'>
+</head>
+
+<body>
+   <div class="animations">
+      <div class="window">
+         <div class="content">
+            <div class="shine"></div>
+            <div class="rain">
+               <div class="dropletOne"></div>
+               <div class="dropletTwo"></div>
+               <div class="dropletThree"></div>
+               <div class="dropletFour"></div>
+               <div class="dropletFive"></div>
+            </div>
+         </div>
+         <input id='blind' type='checkbox' checked>
+         <label class='blind' for='blind'></label>
+         <div class="roll"></div>
+      </div>
+      <div class="lamp-container">
+         <div class="window"></div>
+         <div class="computer"></div>
+         <div class="screen"></div>
+         <div class="picture"></div>
+         <div class="coffee"></div>
+         <input id='light' type='checkbox'>
+         <label class='light' for='light'></label>
+         <div class="lamp-base"></div>
+         <div class="tube"></div>
+         <div class="lamp-shade"></div>
+      </div>
+      <div class="coffee-express">
+         <div class="express">
+            <div class="base">
+               <div class="buttons"></div>
+            </div>
+            <div class="panel">
+               <div class="button"></div>
+               <div class="logo"></div>
+            </div>
+            <div class="coffeepod"></div>
+            <div id="pour"></div>
+            <div class="cup"></div>
+            <div id="wrap">
+               <div id="bubble1" class="steam"></div>
+               <div id="bubble2" class="steam"></div>
+               <div id="bubble3" class="steam"></div>
+               <div id="bubble4" class="steam"></div>
+            </div>
+         </div>
+      </div>
+   </div>
+   <div class="deviceid">
+      <div class="deviceidlabel">Device ID:</div>
+      <div id="copystring" class="deviceidstring">{{ deviceId }}</div>
+      <img class="copybutton" src="static/copy-to-clipboard.png">
+      <div id="copied" class="copied">Copied!</div>
+   </div>
+</body>
+
+</html>
