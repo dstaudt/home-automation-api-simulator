@@ -4,6 +4,8 @@ click==8.0.4
 cryptography==36.0.2
 Flask==2.0.3
 Flask-Session==0.4.0
+gevent==21.12.0
+greenlet==1.1.2
 gunicorn==20.1.0
 itsdangerous==2.1.1
 Jinja2==3.0.3
@@ -11,3 +13,5 @@ MarkupSafe==2.1.1
 pycparser==2.21
 pyOpenSSL==22.0.0
 Werkzeug==2.0.3
+zope.event==4.5.0
+zope.interface==5.4.0

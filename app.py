@@ -5,7 +5,7 @@ import json
 import uuid
 
 app = Flask(__name__)
-app.secret_key = uuid.uuid4()
+app.secret_key = "7fc2b780-6852-4e8c-9332-f869dc940b78"
 app.config["SESSION_PERMANENT"] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -23,27 +23,31 @@ def announce(msg, deviceId):
         del listeners[deviceId]
 
 
-@app.route('/')
-@app.route('/index')
+def init_listener(deviceId):
+    listeners[deviceId] = {
+        "control_state": {
+            "lights_on": False,
+            "blinds_down": False,
+            "coffee_on": False
+        }
+    }
+
+
+@ app.route('/')
+@ app.route('/index')
 def index():
     if not 'deviceId' in session:
         session['deviceId'] = str(uuid.uuid4())
     if not session['deviceId'] in listeners:
-        listeners[session['deviceId']] = {
-            "control_state": {
-                "lights_on": False,
-                "blinds_down": False,
-                "coffee_on": False
-            }
-        }
+        init_listener(session['deviceId'])
     return render_template('index.html',
                            deviceId=session['deviceId'],
                            control_state=json.dumps(listeners[session['deviceId']]['control_state']))
 
 
-@app.route('/lights/<deviceId>', methods=['PUT'])
-@app.route('/blinds/<deviceId>', methods=['PUT'])
-@app.route('/coffee/<deviceId>', methods=['PUT'])
+@ app.route('/lights/<deviceId>', methods=['PUT'])
+@ app.route('/blinds/<deviceId>', methods=['PUT'])
+@ app.route('/coffee/<deviceId>', methods=['PUT'])
 def lights(deviceId):
     if not deviceId in listeners:
         return {}, 404
@@ -54,8 +58,10 @@ def lights(deviceId):
     return '', 204
 
 
-@app.route('/events/<deviceId>', methods=['GET'])
+@ app.route('/events/<deviceId>', methods=['GET'])
 def events(deviceId):
+    if not session['deviceId'] in listeners:
+        init_listener(session['deviceId'])
     listeners[deviceId]['messages'] = queue.Queue(maxsize=100)
 
     def stream():
