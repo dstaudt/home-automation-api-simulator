@@ -1,8 +1,9 @@
 function update_state(control_state) {
     document.querySelector('.copybutton').addEventListener('click', event => {
         navigator.clipboard.writeText(document.getElementById('copystring').textContent);
-        document.querySelector('.copied').classList.add('copy');
-        window.setTimeout(() => { document.querySelector('.copied').classList.remove('copy') }, 2000)
+        document.getElementById('status').textContent = 'Copied!';
+        document.getElementById('status').classList.add('copy');
+        window.setTimeout(() => { document.querySelector('.status').classList.remove('copy') }, 2000)
     });
     document.getElementById('blind').checked = control_state.blinds_down;
     document.getElementById('light').checked = control_state.lights_on;
@@ -27,9 +28,34 @@ function update_state(control_state) {
     }
 }
 
+var source;
+
 document.addEventListener('DOMContentLoaded', () => {
     update_state(control_state)
+    connect_source()
 });
 
-var source = new EventSource(`/events/${deviceId}`);
-source.onmessage = function (msg) { update_state(control_state = JSON.parse(msg.data)) }
+function connect_source() {
+    source = new EventSource(`/events/${deviceId}`);
+
+    source.onmessage = function (msg) { 
+        if (msg.data == 'reconnected') {
+            document.getElementById('status').classList.remove('reconnecting');
+            return;
+        }
+        update_state(control_state = JSON.parse(msg.data))
+    }
+    source.onerror = function (event) {
+        document.getElementById('status').textContent = 'Reconnecting...';
+        document.getElementById('status').classList.add('reconnecting');
+        setTimeout(() => {
+            if (source.readyState == 2) { connect_source() }
+        }, 5000);
+    }
+}
+
+window.onunload = function() { 
+    if (source) { source.close()}
+}
+
+

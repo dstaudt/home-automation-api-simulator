@@ -1,15 +1,14 @@
 from flask import Flask, redirect, render_template, request, Response, session, url_for
 from flask_session import Session
 import json
-import uuid
 import redis
 import os
 
-red = redis.Redis(
+TEST = os.getenv('HOME_AUTO_SIM_TEST') == "True"
+
+red = redis.Redis.from_url(
     decode_responses=True,
-    host=os.getenv("REDIS_HOST", "127.0.0.1"),
-    port=os.getenv("REDIS_PORT", "6379"),
-    password=os.getenv("REDIS_PASSWORD", ""),
+    url=os.environ.get('REDIS_URL'),
     db=0
 )
 
@@ -21,7 +20,7 @@ app.config['SESSION_TYPE'] = 'redis'
 app.config['SESSION_USE_SIGNER'] = True
 app.config['SESSION_COOKIE_SECURE'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_REDIS'] = redis.from_url('redis://localhost:6379')
+app.config['SESSION_REDIS'] = redis.from_url(os.environ.get('REDIS_URL'))
 Session(app)
 
 def init_listener(deviceId):
@@ -29,15 +28,17 @@ def init_listener(deviceId):
         "lights_on": False,
         "blinds_down": False,
         "coffee_on": False
-        })
+        }),
+    ex=app.config['PERMANENT_SESSION_LIFETIME']
     )
+    # red.expire(deviceId, app.config['PERMANENT_SESSION_LIFETIME'])
 
 
 @ app.route('/')
 @ app.route('/index')
 def index():
     if not 'deviceId' in session:
-        session['deviceId'] = str(uuid.uuid4())
+        session['deviceId'] = session.sid
     if not red.exists(session['deviceId']):
         init_listener(session['deviceId'])
     return render_template('index.html',
@@ -53,7 +54,8 @@ def lights(deviceId):
         return {}, 404
     control_state = json.loads(red.get(deviceId))
     control_state.update(request.json)
-    red.set(deviceId, json.dumps(control_state))
+    red.set(deviceId, json.dumps(control_state), ex=app.config['PERMANENT_SESSION_LIFETIME'])
+    red.expire(f'session:{deviceId}', app.config['PERMANENT_SESSION_LIFETIME'])
     msg = f'data: { json.dumps(control_state) }\n\n'
     red.publish(deviceId, msg)
     return '', 204
@@ -63,13 +65,15 @@ def lights(deviceId):
 def events(deviceId):
     if not red.exists(session['deviceId']):
         init_listener(session['deviceId'])
-
+    if TEST:
+        with open('device_ids.log', 'a') as file:
+            file.write(f'{deviceId}\n')
     def stream():
         queue = red.pubsub()
         queue.subscribe(deviceId)
         while True:
+            red.publish(deviceId, f'data: reconnected\n\n')
             for msg in queue.listen():
-                # print(msg.get('data'))
                 if msg and (msg['type'] == 'message'):
                     yield msg.get('data')
 

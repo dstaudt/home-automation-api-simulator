@@ -4,6 +4,7 @@
    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
    "version": "0.2.0",
    "configurations": [
+       
       {
          "name": "Python: Flask",
          "type": "python",
@@ -27,7 +28,10 @@
          "request": "launch",
          "module": "gunicorn",
          "env": { 
-             "GEVENT_SUPPORT": "True"
+             "GEVENT_SUPPORT": "True",
+             "HOME_AUTO_SIM_TEST": "True",
+             "HOME_AUTO_SECRET_KEY": "7fc2b780-6852-4e8c-9332-f869dc940b78",
+             "REDIS_URL": "redis://localhost:6379"
          },
          "args": [
             "-w 4",
@@ -37,6 +41,19 @@
          ],
          "jinja": true,
          "justMyCode": true
+      },
+      {
+         "name": "Python: Test",
+         "type": "python",
+         "request": "launch",
+         "program": "test.py",
+         "env": { 
+         },
+         "args": [
+         ],
+         "jinja": true,
+         "justMyCode": true,
+         "console": "integratedTerminal"
       }
    ]
 }
