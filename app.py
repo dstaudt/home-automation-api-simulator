@@ -15,14 +15,6 @@ Session(app)
 
 listeners = {}
 
-
-def announce(msg, deviceId):
-    try:
-        listeners[deviceId]['messages'].put_nowait(msg)
-    except:
-        del listeners[deviceId]
-
-
 def init_listener(deviceId):
     listeners[deviceId] = {
         "control_state": {
@@ -54,7 +46,11 @@ def lights(deviceId):
     listeners[deviceId]['control_state'].update(request.json)
     data = listeners[deviceId]['control_state']
     msg = f'data: { json.dumps(data) }\n\n'
-    announce(msg, deviceId)
+    try:
+        listeners[deviceId]['messages'].put_nowait(msg)
+    except Exception as err:
+        del listeners[deviceId]
+        return f'Listener {listeners[deviceId]} unreachable: deleted\n{err}', 502
     return '', 204
 
 
@@ -62,10 +58,13 @@ def lights(deviceId):
 def events(deviceId):
     if not session['deviceId'] in listeners:
         init_listener(session['deviceId'])
-    listeners[deviceId]['messages'] = queue.Queue(maxsize=100)
 
     def stream():
+        listeners[deviceId]['messages'] = queue.Queue()
         while True:
-            msg = listeners[deviceId]['messages'].get()
-            yield msg
+            try:
+                msg = listeners[deviceId]['messages'].get()
+                yield msg
+            except GeneratorExit:
+                del listeners[deviceId]
     return Response(stream(), mimetype='text/event-stream')
