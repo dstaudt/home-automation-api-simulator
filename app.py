@@ -6,12 +6,6 @@ import uuid
 from threading import Timer
 from queue import SimpleQueue, Empty
 
-def secho(text, file=None, nl=None, err=None, color=None, **styles):
-    pass
-
-def echo(text, file=None, nl=None, err=None, color=None, **styles):
-    pass
-
 TEST = os.getenv('HOME_AUTO_SIM_TEST') == "True"
 
 red = redis.Redis.from_url(
@@ -23,14 +17,16 @@ red = redis.Redis.from_url(
 listeners = {}
 
 app = Flask(__name__)
-app.secret_key = "7fc2b780-6852-4e8c-9332-f869dc940b78"
+app.secret_key = str(uuid.uuid4())
+
 
 @ app.route('/')
 @ app.route('/index')
 def index():
     if 'deviceId' not in session:
-        session['deviceId']=str(uuid.uuid4())
+        session['deviceId'] = str(uuid.uuid4())
     return render_template('index.html', deviceId=session['deviceId'])
+
 
 @ app.route('/lights/<deviceId>', methods=['PUT'])
 @ app.route('/blinds/<deviceId>', methods=['PUT'])
@@ -46,31 +42,30 @@ def lights(deviceId):
 
 @ app.route('/events/<deviceId>', methods=['GET'])
 def events(deviceId):
+    session['deviceId'] = deviceId
     print('reg '+deviceId+' '+session['deviceId'])
-    session['deviceId']=deviceId
     if TEST:
         with open('device_ids.log', 'a') as file:
             file.write(f'{deviceId}\n')
-    if not deviceId in listeners: 
+    if not deviceId in listeners:
         listeners[deviceId] = SimpleQueue()
         print('listener added: '+str(len(listeners)))
+
     def stream():
         try:
             yield 'data: reconnected\n\n'
             while True:
                 try:
                     if deviceId in listeners:
-                        msg = listeners[deviceId].get(timeout=5)
-                    else:
-                        raise GeneratorExit
-                    yield f'data: {json.dumps(msg["control_status"])}\n\n'
+                        msg = listeners[deviceId].get(timeout=10)
+                        yield f'data: {json.dumps(msg["control_status"])}\n\n'
                 except Empty:
                     print('keepalive')
                     yield 'data: keepalive\n\n'
         except GeneratorExit:
-            listeners.pop(deviceId, None)
             print('exited')
     return Response(stream_with_context(stream()), mimetype='text/event-stream')
+
 
 @ app.route('/deviceIds', methods=['GET'])
 def deviceIds():
@@ -80,10 +75,12 @@ def deviceIds():
     else:
         return '', 404
 
+
 @ app.route('/startTest', methods=['GET'])
 def startTest():
     if TEST:
-        with open('device_ids.log', 'w') as file: pass
+        with open('device_ids.log', 'w') as file:
+            pass
         return '', 200
     else:
         return '', 404
@@ -92,10 +89,12 @@ def startTest():
 process_queue = red.pubsub()
 process_queue.subscribe('messages')
 
+
 class RepeatTimer(Timer):
     def run(self):
         while not self.finished.wait(self.interval):
             self.function(*self.args, **self.kwargs)
+
 
 def check_messages():
     message = process_queue.get_message()
@@ -104,6 +103,6 @@ def check_messages():
         if msg['deviceId'] in listeners:
             listeners[msg['deviceId']].put(msg)
 
+
 message_timer = RepeatTimer(0.01, check_messages)
 message_timer.start()
-
