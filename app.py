@@ -57,7 +57,7 @@ def events(deviceId):
             yield 'data: reconnected\n\n'
             while True:
                 try:
-                    msg = listeners[deviceId].get(timeout=50)
+                    msg = listeners[deviceId].get()
                     yield f'data: {json.dumps(msg["control_status"])}\n\n'
                 except Empty:
                     print('keepalive')
