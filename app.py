@@ -51,20 +51,26 @@ def events(deviceId):
     if TEST:
         with open('device_ids.log', 'a') as file:
             file.write(f'{deviceId}\n')
-    listeners[deviceId] = SimpleQueue()
+    if not deviceId in listeners: 
+        listeners[deviceId] = SimpleQueue()
+        print('listener added: '+str(len(listeners)))
     def stream():
         try:
             yield 'data: reconnected\n\n'
             while True:
                 try:
-                    msg = listeners[deviceId].get()
+                    if deviceId in listeners:
+                        msg = listeners[deviceId].get(timeout=5)
+                    else:
+                        raise GeneratorExit
                     yield f'data: {json.dumps(msg["control_status"])}\n\n'
                 except Empty:
                     print('keepalive')
                     yield 'data: keepalive\n\n'
         except GeneratorExit:
             listeners.pop(deviceId, None)
-    return Response(stream(), mimetype='text/event-stream')
+            print('exited')
+    return Response(stream_with_context(stream()), mimetype='text/event-stream')
 
 @ app.route('/deviceIds', methods=['GET'])
 def deviceIds():
