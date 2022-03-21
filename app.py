@@ -4,7 +4,7 @@ import redis
 import os
 import uuid
 from threading import Timer
-from queue import SimpleQueue
+from queue import SimpleQueue, Empty
 
 def secho(text, file=None, nl=None, err=None, color=None, **styles):
     pass
@@ -53,10 +53,17 @@ def events(deviceId):
             file.write(f'{deviceId}\n')
     listeners[deviceId] = SimpleQueue()
     def stream():
-        yield 'data: reconnected\n\n'
-        while True:
-            msg = listeners[deviceId].get()
-            yield f'data: {json.dumps(msg["control_status"])}\n\n'
+        try:
+            yield 'data: reconnected\n\n'
+            while True:
+                try:
+                    msg = listeners[deviceId].get(timeout=50)
+                    yield f'data: {json.dumps(msg["control_status"])}\n\n'
+                except Empty:
+                    print('keepalive')
+                    yield 'data: keepalive\n\n'
+        except GeneratorExit:
+            listeners.pop(deviceId, None)
     return Response(stream(), mimetype='text/event-stream')
 
 @ app.route('/deviceIds', methods=['GET'])

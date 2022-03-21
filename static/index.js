@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function connect_source() {
     source = new EventSource(`/events/${deviceId}`);
     source.onmessage = function (msg) { 
+        if (msg.data == 'keepalive') return;
         if (msg.data == 'reconnected') {
             document.getElementById('status').classList.remove('reconnecting');
             return;
