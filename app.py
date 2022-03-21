@@ -62,8 +62,11 @@ def events(deviceId):
 @ app.route('/deviceIds', methods=['GET'])
 def deviceIds():
     if TEST:
-        with open('device_ids.log', 'r') as file:
-            return file.read(), 200
+        try:
+            with open('device_ids.log', 'r') as file:
+                return file.read(), 200
+        except Exception as err:
+            return err, 500
 
 @ app.route('/startTest', methods=['GET'])
 def startTest():
