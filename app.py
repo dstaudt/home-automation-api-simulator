@@ -62,17 +62,19 @@ def events(deviceId):
 @ app.route('/deviceIds', methods=['GET'])
 def deviceIds():
     if TEST:
-        try:
-            with open('device_ids.log', 'r') as file:
-                return file.read(), 200
-        except Exception as err:
-            return err, 500
+        with open('device_ids.log', 'r') as file:
+            return file.read(), 200
+    else:
+        return '', 404
 
 @ app.route('/startTest', methods=['GET'])
 def startTest():
     if TEST:
         with open('device_ids.log', 'w') as file: pass
-    return '', 200
+        return '', 200
+    else:
+        return '', 404
+
 
 process_queue = red.pubsub()
 process_queue.subscribe('messages')
