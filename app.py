@@ -57,9 +57,14 @@ def events(deviceId):
         yield 'data: reconnected\n\n'
         while True:
             msg = listeners[deviceId].get()
-            # print(deviceId+' '+msg['deviceId'])
             yield f'data: {json.dumps(msg["control_status"])}\n\n'
     return Response(stream(), mimetype='text/event-stream')
+
+@ app.route('/deviceIds', methods=['GET'])
+def deviceIds():
+    if TEST:
+        with open('device_ids.log', 'r') as file:
+            return file.read(), 200
 
 process_queue = red.pubsub()
 process_queue.subscribe('messages')

@@ -1,17 +1,16 @@
 import requests
 from time import sleep
 import os
-# from os.path import exists
-from pygtail import Pygtail
+from concurrent.futures import ThreadPoolExecutor
 
-baseUrl = "http://localhost:5000"
-# baseUrl = 'https://home-automation-api-simulator.herokuapp.com/'
+# baseUrl = "http://localhost:5000"
+baseUrl = 'https://home-automation-api-simulator.herokuapp.com/'
 
 profiles = [
     # 'Test01',
     # 'Test02',
-    # 'Test03',
-    # 'Test04',
+    'Test03',
+    'Test04',
     'Test05',
     'Test06',
     'Test07',
@@ -19,7 +18,7 @@ profiles = [
 ]
 
 
-with open('device_ids.log', 'w'): pass
+# with open('device_ids.log', 'w'): pass
 
 for profile in profiles:
     os.system(f'firefox -p {profile} -width 722 -height 582 -new-tab {baseUrl} &')
@@ -30,32 +29,25 @@ input('Waiting for browsers to spawn...')
 with open('device_ids.log', 'r') as file:
     deviceIds = file.read().splitlines()
 
+def post_url(url, json):
+    return requests.put(url=url, json=json)
+
+pool = ThreadPoolExecutor(max_workers=12)
+
 while True:
     for deviceId in deviceIds:
         try:
-            response = requests.request("PUT", f'{baseUrl}/blinds/{deviceId}', json={ "blinds_down": True})
-            print(response.url+' '+str(response.request.body))
-            if not response.status_code == 204: print(f'ID: {deviceId} response {response}')
-            response = requests.request("PUT", f'{baseUrl}/lights/{deviceId}', json={ "lights_on": True})
-            print(response.url+' '+str(response.request.body))
-            if not response.status_code == 204: print(f'ID: {deviceId} response {response}')
-            response = requests.request("PUT", f'{baseUrl}/coffee/{deviceId}', json={ "coffee_on": True})
-            print(response.url+' '+str(response.request.body))
-            if not response.status_code == 204: print(f'ID: {deviceId} response {response}')
+            pool.submit(post_url,url=f'{baseUrl}/blinds/{deviceId}', json={ "blinds_down": True} )
+            pool.submit(post_url,url=f'{baseUrl}/lights/{deviceId}', json={ "lights_on": True} )
+            pool.submit(post_url,url=f'{baseUrl}/coffee/{deviceId}', json={ "coffee_on": True} )
         except Exception as err:
             print(err)
     sleep(5)
     for deviceId in deviceIds:
         try:
-            response = requests.request("PUT", f'{baseUrl}/blinds/{deviceId}', json={ "blinds_down": False})
-            print(response.url+' '+str(response.request.body))
-            if not response.status_code == 204: print(f'ID: {deviceId} response {response}')
-            response = requests.request("PUT", f'{baseUrl}/lights/{deviceId}', json={ "lights_on": False})
-            print(response.url+' '+str(response.request.body))
-            if not response.status_code == 204: print(f'ID: {deviceId} response {response}')
-            response = requests.request("PUT", f'{baseUrl}/coffee/{deviceId}', json={ "coffee_on": False})
-            print(response.url+' '+str(response.request.body))
-            if not response.status_code == 204: print(f'ID: {deviceId} response {response}')
+            pool.submit(post_url,url=f'{baseUrl}/blinds/{deviceId}', json={ "blinds_down": False} )
+            pool.submit(post_url,url=f'{baseUrl}/lights/{deviceId}', json={ "lights_on": False} )
+            pool.submit(post_url,url=f'{baseUrl}/coffee/{deviceId}', json={ "coffee_on": False} )
         except Exception as err:
             print(err)
     sleep(5)
