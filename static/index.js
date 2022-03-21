@@ -1,10 +1,5 @@
 function update_state(control_state) {
-    document.querySelector('.copybutton').addEventListener('click', event => {
-        navigator.clipboard.writeText(document.getElementById('copystring').textContent);
-        document.getElementById('status').textContent = 'Copied!';
-        document.getElementById('status').classList.add('copy');
-        window.setTimeout(() => { document.querySelector('.status').classList.remove('copy') }, 2000)
-    });
+
     document.getElementById('blind').checked = control_state.blinds_down;
     document.getElementById('light').checked = control_state.lights_on;
     if (control_state.coffee_on == true) {
@@ -29,21 +24,33 @@ function update_state(control_state) {
 }
 
 var source;
+var control_state = {
+    "blinds_down": false,
+    "lights_on": false,
+    "coffee_on": false
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     update_state(control_state)
     connect_source()
+    document.querySelector('.copybutton').addEventListener('click', event => {
+        navigator.clipboard.writeText(document.getElementById('copystring').textContent);
+        document.getElementById('status').textContent = 'Copied!';
+        document.getElementById('status').classList.add('copy');
+        window.setTimeout(() => { document.querySelector('.status').classList.remove('copy') }, 2000)
+    });
 });
 
 function connect_source() {
     source = new EventSource(`/events/${deviceId}`);
-
     source.onmessage = function (msg) { 
         if (msg.data == 'reconnected') {
             document.getElementById('status').classList.remove('reconnecting');
             return;
         }
-        update_state(control_state = JSON.parse(msg.data))
+        new_state = JSON.parse(msg.data);
+        control_state = { ...control_state, ...new_state};
+        update_state(control_state);
     }
     source.onerror = function (event) {
         document.getElementById('status').textContent = 'Reconnecting...';

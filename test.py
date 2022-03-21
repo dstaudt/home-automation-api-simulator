@@ -4,14 +4,14 @@ import os
 # from os.path import exists
 from pygtail import Pygtail
 
-# baseUrl = "http://localhost:5000"
-baseUrl = 'https://home-automation-api-simulator.herokuapp.com/'
+baseUrl = "http://localhost:5000"
+# baseUrl = 'https://home-automation-api-simulator.herokuapp.com/'
 
 profiles = [
-    'Test01',
-    'Test02',
-    'Test03',
-    'Test04',
+    # 'Test01',
+    # 'Test02',
+    # 'Test03',
+    # 'Test04',
     'Test05',
     'Test06',
     'Test07',
