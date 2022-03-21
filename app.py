@@ -57,7 +57,7 @@ def events(deviceId):
             while True:
                 try:
                     if deviceId in listeners:
-                        msg = listeners[deviceId].get(timeout=10)
+                        msg = listeners[deviceId].get(timeout=20)
                         yield f'data: {json.dumps(msg["control_status"])}\n\n'
                 except Empty:
                     print('keepalive')
