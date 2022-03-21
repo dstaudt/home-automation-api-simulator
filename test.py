@@ -3,8 +3,8 @@ from time import sleep
 import os
 from concurrent.futures import ThreadPoolExecutor
 
-# baseUrl = "http://localhost:5000"
-baseUrl = 'https://home-automation-api-simulator.herokuapp.com/'
+baseUrl = "http://localhost:5000"
+# baseUrl = 'https://home-automation-api-simulator.herokuapp.com/'
 
 profiles = [
     # 'Test01',
@@ -17,17 +17,19 @@ profiles = [
     'Test08'
 ]
 
-
-# with open('device_ids.log', 'w'): pass
-
+resp = requests.get(f'{baseUrl}/startTest')
 for profile in profiles:
     os.system(f'firefox -p {profile} -width 722 -height 582 -new-tab {baseUrl} &')
+    sleep(2)
+
+deviceIds = []
+print('Browsers started: 0')
+while True:
     sleep(3)
-
-input('Waiting for browsers to spawn...')
-
-with open('device_ids.log', 'r') as file:
-    deviceIds = file.read().splitlines()
+    resp = requests.get(f'{baseUrl}/deviceIds')
+    deviceIds = resp.text.splitlines()
+    print(f'Browsers started: {len(deviceIds)}','\r')
+    if  len(deviceIds) == len(profiles): break
 
 def post_url(url, json):
     return requests.put(url=url, json=json)

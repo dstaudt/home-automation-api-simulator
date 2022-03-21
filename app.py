@@ -4,7 +4,6 @@ import redis
 import os
 import uuid
 from threading import Timer
-import click
 from queue import SimpleQueue
 
 def secho(text, file=None, nl=None, err=None, color=None, **styles):
@@ -65,6 +64,12 @@ def deviceIds():
     if TEST:
         with open('device_ids.log', 'r') as file:
             return file.read(), 200
+
+@ app.route('/startTest', methods=['GET'])
+def startTest():
+    if TEST:
+        with open('device_ids.log', 'w') as file: pass
+    return '', 200
 
 process_queue = red.pubsub()
 process_queue.subscribe('messages')
