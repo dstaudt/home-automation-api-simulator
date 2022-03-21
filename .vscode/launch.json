@@ -12,12 +12,14 @@
             "env": {
                 "FLASK_APP": "app.py",
                 "HOME_AUTO_SIM_TEST": "True",
-                "FLASK_ENV": "development",
+                // "FLASK_ENV": "development",
                 "REDIS_URL": "redis://localhost:6379"
             },
             "args": [
                 "run",
                 "--no-debugger",
+                "--no-reload",
+                "2>/dev/null"
                 // "--cert=adhoc"
             ],
             "jinja": true,

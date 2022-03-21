@@ -1,8 +1,17 @@
-from flask import Flask, render_template, request, Response, session
+from flask import Flask, render_template, request, Response, session, stream_with_context
 import json
 import redis
 import os
 import uuid
+from threading import Timer
+import click
+from queue import SimpleQueue
+
+def secho(text, file=None, nl=None, err=None, color=None, **styles):
+    pass
+
+def echo(text, file=None, nl=None, err=None, color=None, **styles):
+    pass
 
 TEST = os.getenv('HOME_AUTO_SIM_TEST') == "True"
 
@@ -11,6 +20,8 @@ red = redis.Redis.from_url(
     url=os.environ.get('REDIS_URL'),
     db=0
 )
+
+listeners = {}
 
 app = Flask(__name__)
 app.secret_key = "7fc2b780-6852-4e8c-9332-f869dc940b78"
@@ -26,28 +37,45 @@ def index():
 @ app.route('/blinds/<deviceId>', methods=['PUT'])
 @ app.route('/coffee/<deviceId>', methods=['PUT'])
 def lights(deviceId):
-    msg = f'data: {json.dumps(request.json)}\n\n'
-    try:
-        red.publish(deviceId, msg)
-    except:
-        return '', 404
+    msg = {
+        'deviceId': deviceId,
+        'control_status': request.json
+    }
+    red.publish('messages', json.dumps(msg))
     return '', 204
 
 
 @ app.route('/events/<deviceId>', methods=['GET'])
 def events(deviceId):
+    print('reg '+deviceId+' '+session['deviceId'])
     session['deviceId']=deviceId
     if TEST:
         with open('device_ids.log', 'a') as file:
             file.write(f'{deviceId}\n')
+    listeners[deviceId] = SimpleQueue()
     def stream():
-        queue = red.pubsub()
-        queue.subscribe(deviceId)
+        yield 'data: reconnected\n\n'
         while True:
-            red.publish(deviceId, f'data: reconnected\n\n')
-            for msg in queue.listen():
-                if msg and (msg['type'] == 'message'):
-                    yield msg.get('data')
-
+            msg = listeners[deviceId].get()
+            # print(deviceId+' '+msg['deviceId'])
+            yield f'data: {json.dumps(msg["control_status"])}\n\n'
     return Response(stream(), mimetype='text/event-stream')
-    return {}, 200
+
+process_queue = red.pubsub()
+process_queue.subscribe('messages')
+
+class RepeatTimer(Timer):
+    def run(self):
+        while not self.finished.wait(self.interval):
+            self.function(*self.args, **self.kwargs)
+
+def check_messages():
+    message = process_queue.get_message()
+    if message and message['type'] == 'message':
+        msg = json.loads(message['data'])
+        if msg['deviceId'] in listeners:
+            listeners[msg['deviceId']].put(msg)
+
+message_timer = RepeatTimer(0.01, check_messages)
+message_timer.start()
+
