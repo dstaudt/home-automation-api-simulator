@@ -17,7 +17,7 @@ red = redis.Redis.from_url(
 listeners = {}
 
 app = Flask(__name__)
-app.secret_key = str(uuid.uuid4())
+app.secret_key = "3ba9baf4-1e1b-42d4-b8bd-e18c0a329300"
 
 
 @ app.route('/')
@@ -49,7 +49,6 @@ def events(deviceId):
             file.write(f'{deviceId}\n')
     if not deviceId in listeners:
         listeners[deviceId] = SimpleQueue()
-        print('listener added: '+str(len(listeners)))
 
     def stream():
         try:
@@ -57,13 +56,13 @@ def events(deviceId):
             while True:
                 try:
                     if deviceId in listeners:
-                        msg = listeners[deviceId].get(timeout=20)
+                        msg = listeners[deviceId].get(timeout=50)
                         yield f'data: {json.dumps(msg["control_status"])}\n\n'
                 except Empty:
-                    print('keepalive')
+                    print(f'{deviceId}: keepalive')
                     yield 'data: keepalive\n\n'
         except GeneratorExit:
-            print('exited')
+            print('deviceId: '+deviceId+' exited')
     return Response(stream_with_context(stream()), mimetype='text/event-stream')
 
 
