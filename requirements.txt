@@ -1,5 +1,4 @@
 autopep8==1.6.0
-cachelib==0.6.0
 certifi==2021.10.8
 cffi==1.15.0
 charset-normalizer==2.0.12
@@ -7,7 +6,6 @@ click==8.0.4
 cryptography==36.0.2
 Deprecated==1.2.13
 Flask==2.0.3
-Flask-Session==0.4.0
 gevent==21.12.0
 greenlet==1.1.2
 gunicorn==20.1.0
@@ -16,10 +14,8 @@ itsdangerous==2.1.1
 Jinja2==3.0.3
 MarkupSafe==2.1.1
 packaging==21.3
-pika==1.2.0
 pycodestyle==2.8.0
 pycparser==2.21
-pyOpenSSL==22.0.0
 pyparsing==3.0.7
 redis==4.1.4
 requests==2.27.1

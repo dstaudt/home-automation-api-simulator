@@ -19,8 +19,8 @@
                 "run",
                 "--no-debugger",
                 "--no-reload",
-                "2>/dev/null"
-                // "--cert=adhoc"
+                // "--cert=adhoc",
+                // "2>/dev/null"
             ],
             "jinja": true,
             "justMyCode": true
