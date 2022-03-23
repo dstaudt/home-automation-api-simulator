@@ -7,10 +7,10 @@ baseUrl = "http://localhost:5000"
 # baseUrl = 'https://home-automation-api-simulator.herokuapp.com/'
 
 profiles = [
-    # 'Test01',
-    # 'Test02',
-    # 'Test03',
-    # 'Test04',
+    'Test01',
+    'Test02',
+    'Test03',
+    'Test04',
     'Test05',
     'Test06',
     'Test07',
@@ -20,7 +20,7 @@ deviceIds = []
 
 resp = requests.get(f'{baseUrl}/startTest', verify=False)
 for profile in profiles:
-    os.system(f'firefox -p {profile} -width 722 -height 582 -new-tab {baseUrl} &')
+    os.system(f'firefox -p {profile} -width 750 -height 600 -new-tab {baseUrl} &')
     sleep(2)
 
 print('Browsers started: 0', '\r')

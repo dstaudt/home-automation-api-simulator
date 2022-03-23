@@ -20,7 +20,7 @@
                 "--no-debugger",
                 "--no-reload",
                 // "--cert=adhoc",
-                // "2>/dev/null"
+                "2>/dev/null"
             ],
             "jinja": true,
             "justMyCode": true

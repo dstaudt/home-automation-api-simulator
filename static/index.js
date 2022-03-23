@@ -2,24 +2,30 @@ function update_state(control_state) {
 
     document.getElementById('blind').checked = control_state.blinds_down;
     document.getElementById('light').checked = control_state.lights_on;
-    if (control_state.coffee_on == true) {
-        document.getElementById('bubble1').classList.add('steam1');
-        document.getElementById('bubble2').classList.add('steam2');
-        document.getElementById('bubble3').classList.add('steam3');
-        document.getElementById('bubble4').classList.add('steam4');
-        document.getElementById('pour').classList.add('drinks')
+    if (control_state.coffee_on) {
+        if (TEST) {
+            document.getElementById('pour').classList.add('drinksstatic');
+            return;
+        }
+        document.getElementById('pour').classList.add('drinks');
+        ['1', '2', '3', '4'].forEach((index) => {
+            document.getElementById(`bubble${index}`).classList.add(`steam${index}`)
+        })
     }
     else {
-        document.querySelector('.steam').addEventListener('animationiteration', () => {
-            document.getElementById('bubble1').classList.remove('steam1');
-            document.getElementById('bubble2').classList.remove('steam2');
-            document.getElementById('bubble3').classList.remove('steam3');
-            document.getElementById('bubble4').classList.remove('steam4');
-        }, { once: true });
+        if (TEST) {
+            try { document.getElementById('pour').classList.remove('drinksstatic') } catch { };
+            return;
+        }
         if (document.querySelector('.drinks'))
-            document.querySelector('.drinks').addEventListener('animationiteration', () => {
+            document.querySelector('.drinks').onanimationiteration = () => {
                 document.getElementById('pour').classList.remove('drinks')
-            }, { once: true });
+            }, { once: true };
+        document.querySelector('.steam').onanimationiteration = () => {
+            ['1', '2', '3', '4'].forEach((index) => {
+                document.getElementById(`bubble${index}`).classList.remove(`steam${index}`)
+            })
+        }, { once: true };
     }
 }
 
@@ -31,8 +37,8 @@ var control_state = {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    update_state(control_state)
-    connect_source()
+    update_state(control_state);
+    connect_source();
     document.querySelector('.copybutton').addEventListener('click', event => {
         navigator.clipboard.writeText(document.getElementById('copystring').textContent);
         document.getElementById('status').textContent = 'Copied!';
@@ -43,27 +49,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function connect_source() {
     source = new EventSource(`/events/${deviceId}`);
-    source.onmessage = function (msg) { 
+    source.onmessage = (msg) => {
         if (msg.data == 'keepalive') return;
         if (msg.data == 'reconnected') {
             document.getElementById('status').classList.remove('reconnecting');
             return;
         }
-        new_state = JSON.parse(msg.data);
-        control_state = { ...control_state, ...new_state};
+        control_state = { ...control_state, ...JSON.parse(msg.data) };
         update_state(control_state);
     }
-    source.onerror = function (event) {
+    source.onerror = (event) => {
         document.getElementById('status').textContent = 'Reconnecting...';
         document.getElementById('status').classList.add('reconnecting');
         setTimeout(() => {
-            if (source.readyState == 2) { connect_source() }
+            if (source.readyState == 2) connect_source()
         }, 5000);
     }
 }
 
-window.onunload = function() { 
-    if (source) { source.close()}
-}
+window.addEventListener('onunload', () => {
+    if (source) { source.close() }
+})
 
 

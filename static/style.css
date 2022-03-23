@@ -753,6 +753,33 @@ input#coffee {
     animation-delay: 1s;
 }
 
+.drinksstatic {
+    position: absolute;
+    z-index: 8;
+}
+
+.drinksstatic:before {
+    content: "";
+    position: absolute;
+    width: 6px;
+    height: 65px;
+    opacity: 1;
+    top: 50px;
+    left: 87px;
+    background-color: #472708;
+}
+
+.drinksstatic:after {
+    content: "";
+    position: absolute;
+    width: 6px;
+    height: 65px;
+    opacity: 1;
+    top: 50px;
+    left: 107px;
+    background-color: white;
+}
+
 .cup {
     position: absolute;
     background-color: #ae2012;

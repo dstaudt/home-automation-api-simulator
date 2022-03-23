@@ -18,6 +18,7 @@ listeners = {}
 
 app = Flask(__name__)
 app.secret_key = "3ba9baf4-1e1b-42d4-b8bd-e18c0a329300"
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 
 @ app.route('/')
@@ -25,7 +26,7 @@ app.secret_key = "3ba9baf4-1e1b-42d4-b8bd-e18c0a329300"
 def index():
     if 'deviceId' not in session:
         session['deviceId'] = str(uuid.uuid4())
-    return render_template('index.html', deviceId=session['deviceId'])
+    return render_template('index.html', deviceId=session['deviceId'], TEST=TEST)
 
 
 @ app.route('/lights/<deviceId>', methods=['PUT'])
@@ -43,26 +44,33 @@ def lights(deviceId):
 @ app.route('/events/<deviceId>', methods=['GET'])
 def events(deviceId):
     session['deviceId'] = deviceId
-    print('reg '+deviceId+' '+session['deviceId'])
+    print(f'REGISTER pid:{os.getpid()} did:{deviceId}')
     if TEST:
         with open('device_ids.log', 'a') as file:
             file.write(f'{deviceId}\n')
-    if not deviceId in listeners:
-        listeners[deviceId] = SimpleQueue()
-
+    if deviceId in listeners:
+        listeners[deviceId].put('kill')
+    listeners[deviceId] = SimpleQueue()
     def stream():
         try:
+            streaming = True
             yield 'data: reconnected\n\n'
-            while True:
+            while streaming:
                 try:
                     if deviceId in listeners:
-                        msg = listeners[deviceId].get(timeout=15)
+                        msg = listeners[deviceId].get(timeout=7)
+                        if msg == 'kill':
+                            streaming = False
+                            print(f'KILL pid:{os.getpid()} did:{deviceId}')
+                            break
+                        print(f'STREAM pid:{os.getpid()} did:{deviceId}')
                         yield f'data: {json.dumps(msg["control_status"])}\n\n'
                 except Empty:
-                    print(f'{deviceId}: keepalive')
+                    print(f'KEEPALIVE pid:{os.getpid()} did:{deviceId}')
                     yield 'data: keepalive\n\n'
         except GeneratorExit:
-            print('deviceId: '+deviceId+' exited')
+            listeners.pop('deviceId', None)
+            print(f'EXITED pid:{os.getpid()} did:{deviceId}')
     return Response(stream_with_context(stream()), mimetype='text/event-stream')
 
 
@@ -99,9 +107,10 @@ def check_messages():
     message = process_queue.get_message()
     if message and message['type'] == 'message':
         msg = json.loads(message['data'])
+        print(f'pid: {os.getpid()} {msg["deviceId"]}: got message')
         if msg['deviceId'] in listeners:
+            print(f'pid: {os.getpid()} {msg["deviceId"]}: dispatched data:{msg["control_status"]}')
             listeners[msg['deviceId']].put(msg)
-
 
 message_timer = RepeatTimer(0.01, check_messages)
 message_timer.start()

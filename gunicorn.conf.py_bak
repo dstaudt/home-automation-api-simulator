@@ -1,0 +1,13 @@
+from multiprocessing import Manager, Queue
+
+manager = Manager()
+main_queue = manager.Queue()
+
+def on_starting(server):
+
+    with open('device_ids.log','w') as file: pass
+
+def pre_fork(server, worker):
+
+    worker.main_queue = main_queue
+    print('pre_fork"')

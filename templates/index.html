@@ -5,9 +5,11 @@
    <meta charset="utf-8" />
    <script>
       var deviceId = "{{ deviceId|safe }}";
+      var TEST = {{ 'true' if TEST else 'false' }};
    </script>
    <script src="static/index.js"></script>
    <link rel='stylesheet' href='static/style.css'>
+   <link rel="icon" href="static/favicon.svg" type="image/svg+xml">
 </head>
 
 <body>
@@ -16,11 +18,13 @@
          <div class="content">
             <div class="shine"></div>
             <div class="rain">
+               {% if not TEST %} 
                <div class="dropletOne"></div>
                <div class="dropletTwo"></div>
                <div class="dropletThree"></div>
                <div class="dropletFour"></div>
                <div class="dropletFive"></div>
+               {% endif %}
             </div>
          </div>
          <input id='blind' type='checkbox' checked>
