@@ -1,1 +1,1 @@
-web: gunicorn -c hooks.py -k gevent -w 4 wsgi:app
+web: gunicorn -k gevent -w 4 wsgi:app

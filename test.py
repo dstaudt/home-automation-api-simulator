@@ -3,8 +3,8 @@ from time import sleep
 import os
 from concurrent.futures import ThreadPoolExecutor
 
-baseUrl = "http://localhost:5000"
-# baseUrl = 'https://home-automation-api-simulator.herokuapp.com/'
+# baseUrl = "http://localhost:5000"
+baseUrl = 'https://home-automation-api-simulator.herokuapp.com/'
 
 profiles = [
     'Test01',
