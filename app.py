@@ -14,7 +14,10 @@ red = redis.Redis.from_url(
     db=0
 )
 
-listeners = {}
+process_queue = red.pubsub()
+process_queue.subscribe('messages')
+
+thread_queue = {}
 
 app = Flask(__name__)
 app.secret_key = "3ba9baf4-1e1b-42d4-b8bd-e18c0a329300"
@@ -48,17 +51,17 @@ def events(deviceId):
     if TEST:
         with open('device_ids.log', 'a') as file:
             file.write(f'{deviceId}\n')
-    if deviceId in listeners:
-        listeners[deviceId].put('kill')
-    listeners[deviceId] = SimpleQueue()
+    if deviceId in thread_queue:
+        thread_queue[deviceId].put('kill')
+    thread_queue[deviceId] = SimpleQueue()
     def stream():
         try:
             streaming = True
             yield 'data: reconnected\n\n'
             while streaming:
                 try:
-                    if deviceId in listeners:
-                        msg = listeners[deviceId].get(timeout=7)
+                    if deviceId in thread_queue:
+                        msg = thread_queue[deviceId].get(timeout=7)
                         if msg == 'kill':
                             streaming = False
                             print(f'KILL pid:{os.getpid()} did:{deviceId}')
@@ -69,7 +72,7 @@ def events(deviceId):
                     print(f'KEEPALIVE pid:{os.getpid()} did:{deviceId}')
                     yield 'data: keepalive\n\n'
         except GeneratorExit:
-            listeners.pop('deviceId', None)
+            thread_queue.pop('deviceId', None)
             print(f'EXITED pid:{os.getpid()} did:{deviceId}')
     return Response(stream_with_context(stream()), mimetype='text/event-stream')
 
@@ -92,25 +95,18 @@ def startTest():
     else:
         return '', 404
 
-
-process_queue = red.pubsub()
-process_queue.subscribe('messages')
-
-
-class RepeatTimer(Timer):
-    def run(self):
-        while not self.finished.wait(self.interval):
-            self.function(*self.args, **self.kwargs)
-
-
 def check_messages():
     message = process_queue.get_message()
     if message and message['type'] == 'message':
         msg = json.loads(message['data'])
         print(f'pid: {os.getpid()} {msg["deviceId"]}: got message')
-        if msg['deviceId'] in listeners:
+        if msg['deviceId'] in thread_queue:
             print(f'pid: {os.getpid()} {msg["deviceId"]}: dispatched data:{msg["control_status"]}')
-            listeners[msg['deviceId']].put(msg)
+            thread_queue[msg['deviceId']].put(msg)
 
+class RepeatTimer(Timer):
+    def run(self):
+        while not self.finished.wait(self.interval):
+            self.function(*self.args, **self.kwargs)
 message_timer = RepeatTimer(0.01, check_messages)
 message_timer.start()
