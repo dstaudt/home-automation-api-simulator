@@ -890,7 +890,7 @@ input#coffee {
 .deviceid {
     display: flex;
     justify-content: center;
-    text-align: center;
+    /* text-align: center; */
     margin-top: 20px;
     font-weight: bold;
 }
@@ -919,6 +919,26 @@ input#coffee {
 
 .copy {
     animation: fade ease 2s;
+}
+
+.version {
+    line-height: 10px;
+    font-family: sans-serif;
+    font-size: 14px;
+    color: #ffffff;
+    background: #7d8492;
+    border-radius: 57px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    margin-right: 7px;
+    padding: 7px;
+    background-color: #89bf04;
+    text-decoration: none;
+}
+
+.postman {
+    margin-bottom: -5px;
+    padding-top: 2px;
 }
 
 @keyframes fade {

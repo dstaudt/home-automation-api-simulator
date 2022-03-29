@@ -1,4 +1,6 @@
-from flask import Flask, render_template, request, Response, session, stream_with_context
+from ssl import ALERT_DESCRIPTION_CERTIFICATE_EXPIRED
+from flask import Flask, render_template, request, Response, send_from_directory, session, stream_with_context
+from flask_cors import CORS
 import json
 import redis
 import os
@@ -17,9 +19,10 @@ red = redis.Redis.from_url(
 process_queue = red.pubsub()
 process_queue.subscribe('messages')
 
-thread_queue = {}
+thread_queues = {}
 
 app = Flask(__name__)
+CORS(app)
 app.secret_key = "3ba9baf4-1e1b-42d4-b8bd-e18c0a329300"
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
@@ -31,6 +34,14 @@ def index():
         session['deviceId'] = str(uuid.uuid4())
     return render_template('index.html', deviceId=session['deviceId'], TEST=TEST)
 
+@ app.route('/downloads/<filename>')
+def downloads(filename):
+    return send_from_directory(
+        'downloads', 
+        filename, 
+        as_attachment=True,
+        attachment_filename=filename,
+        mimetype='application/octet-stream')
 
 @ app.route('/lights/<deviceId>', methods=['PUT'])
 @ app.route('/blinds/<deviceId>', methods=['PUT'])
@@ -51,17 +62,17 @@ def events(deviceId):
     if TEST:
         with open('device_ids.log', 'a') as file:
             file.write(f'{deviceId}\n')
-    if deviceId in thread_queue:
-        thread_queue[deviceId].put('kill')
-    thread_queue[deviceId] = SimpleQueue()
+    if deviceId in thread_queues:
+        thread_queues[deviceId].put('kill')
+    thread_queues[deviceId] = SimpleQueue()
     def stream():
         try:
             streaming = True
             yield 'data: reconnected\n\n'
             while streaming:
                 try:
-                    if deviceId in thread_queue:
-                        msg = thread_queue[deviceId].get(timeout=7)
+                    if deviceId in thread_queues:
+                        msg = thread_queues[deviceId].get(timeout=7)
                         if msg == 'kill':
                             streaming = False
                             print(f'KILL pid:{os.getpid()} did:{deviceId}')
@@ -72,37 +83,30 @@ def events(deviceId):
                     print(f'KEEPALIVE pid:{os.getpid()} did:{deviceId}')
                     yield 'data: keepalive\n\n'
         except GeneratorExit:
-            thread_queue.pop('deviceId', None)
+            thread_queues.pop('deviceId', None)
             print(f'EXITED pid:{os.getpid()} did:{deviceId}')
     return Response(stream_with_context(stream()), mimetype='text/event-stream')
 
-
-@ app.route('/deviceIds', methods=['GET'])
-def deviceIds():
-    if TEST:
+if TEST:
+    @ app.route('/deviceIds', methods=['GET'])
+    def deviceIds():
         with open('device_ids.log', 'r') as file:
             return file.read(), 200
-    else:
-        return '', 404
 
-
-@ app.route('/startTest', methods=['GET'])
-def startTest():
-    if TEST:
+    @ app.route('/startTest', methods=['GET'])
+    def startTest():
         with open('device_ids.log', 'w') as file:
             pass
         return '', 200
-    else:
-        return '', 404
 
 def check_messages():
     message = process_queue.get_message()
     if message and message['type'] == 'message':
         msg = json.loads(message['data'])
         print(f'pid: {os.getpid()} {msg["deviceId"]}: got message')
-        if msg['deviceId'] in thread_queue:
+        if msg['deviceId'] in thread_queues:
             print(f'pid: {os.getpid()} {msg["deviceId"]}: dispatched data:{msg["control_status"]}')
-            thread_queue[msg['deviceId']].put(msg)
+            thread_queues[msg['deviceId']].put(msg)
 
 class RepeatTimer(Timer):
     def run(self):

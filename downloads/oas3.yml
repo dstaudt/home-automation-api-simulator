@@ -1,0 +1,96 @@
+openapi: 3.0.0
+info:
+  title: home-automation-api-simulator
+  contact:
+    email: dstaudt@cisco.com
+  license:
+    name: MIT
+    url: https://es.wikipedia.org/wiki/Licencia_MIT
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000
+paths:
+  /blinds/{deviceId}:
+    put:
+      tags:
+        - Device Control
+      summary: Blinds Down/Up
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - blinds_down
+              properties:
+                blinds_down:
+                  type: boolean
+              example:
+                blinds_down: true
+      parameters:
+        - name: deviceId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '204':
+          description: Successful response
+          content:
+            application/json: {}
+  /lights/{deviceId}:
+    put:
+      tags:
+      - Device Control
+      summary: Lights On/Off
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - lights_on
+              properties:
+                lights_on:
+                  type: boolean
+              example:
+                lights_on: true
+      parameters:
+        - name: deviceId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '204':
+          description: Successful response
+          content:
+            application/json: {}
+  /coffee/{deviceId}:
+    put:
+      tags:
+        - Device Control
+      summary: Coffee On/Off
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - coffee_on
+              properties:
+                coffee_on:
+                  type: boolean
+              example:
+                coffee_on: true
+      parameters:
+        - name: deviceId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '204':
+          description: Successful response
+          content:
+            application/json: {}

@@ -8,9 +8,9 @@ baseUrl = 'https://home-automation-api-simulator.herokuapp.com/'
 
 profiles = [
     'Test01',
-    'Test02',
-    'Test03',
-    'Test04',
+    # 'Test02',
+    # 'Test03',
+    # 'Test04',
     'Test05',
     'Test06',
     'Test07',
