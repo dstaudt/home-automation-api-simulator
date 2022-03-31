@@ -6,6 +6,7 @@ click==8.0.4
 cryptography==36.0.2
 Deprecated==1.2.13
 Flask==2.0.3
+Flask-Cors==3.0.10
 gevent==21.12.0
 greenlet==1.1.2
 gunicorn==20.1.0
@@ -19,6 +20,7 @@ pycparser==2.21
 pyparsing==3.0.7
 redis==4.1.4
 requests==2.27.1
+six==1.16.0
 toml==0.10.2
 urllib3==1.26.9
 Werkzeug==2.0.3
