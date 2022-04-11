@@ -29,7 +29,7 @@ function update_state(control_state) {
     }
 }
 
-var source;
+var ws;
 var control_state = {
     "blinds_down": false,
     "lights_on": false,
@@ -38,7 +38,7 @@ var control_state = {
 
 document.addEventListener('DOMContentLoaded', () => {
     update_state(control_state);
-    connect_source();
+    connect_ws();
     document.querySelector('.copybutton').addEventListener('click', event => {
         navigator.clipboard.writeText(document.getElementById('copystring').textContent);
         document.getElementById('status').textContent = 'Copied!';
@@ -47,28 +47,31 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-function connect_source() {
-    source = new EventSource(`/events/${deviceId}`);
-    source.onmessage = (msg) => {
+function connect_ws() {
+    ws = new WebSocket(`ws://${location.host}/events/${deviceId}`)
+    ws.addEventListener('message', msg => {
         if (msg.data == 'keepalive') return;
-        if (msg.data == 'reconnected') {
+        if (msg.data == 'connected') {
             document.getElementById('status').classList.remove('reconnecting');
             return;
         }
         control_state = { ...control_state, ...JSON.parse(msg.data) };
         update_state(control_state);
-    }
-    source.onerror = (event) => {
+    });
+    ws.addEventListener('close', err => {
         document.getElementById('status').textContent = 'Reconnecting...';
         document.getElementById('status').classList.add('reconnecting');
         setTimeout(() => {
-            if (source.readyState == 2) connect_source()
-        }, 5000);
-    }
+            if ([WebSocket.CLOSED, WebSocket.CLOSING].includes(ws.readyState)) connect_ws()
+        }, 5000);        
+    });
 }
 
-window.addEventListener('onunload', () => {
-    if (source) { source.close() }
+window.addEventListener('beforeunload', () => {
+    if (ws) {
+        ws.close();
+        console.log('Closed websocket');
+    } 
 })
 
 
