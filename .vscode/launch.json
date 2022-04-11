@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Flask",
+            "name": "Server: Flask",
             "type": "python",
             "request": "launch",
             "module": "flask",
@@ -26,7 +26,7 @@
             "justMyCode": true
         },
         {
-            "name": "Python: Gunicorn",
+            "name": "Server: Gunicorn",
             "type": "python",
             "request": "launch",
             "module": "gunicorn",
@@ -46,11 +46,26 @@
             "justMyCode": true
         },
         {
-            "name": "Python: Test",
+            "name": "Test: Local",
             "type": "python",
             "request": "launch",
             "program": "test.py",
-            "env": {},
+            "env": {
+                "HOME_AUTO_BASEURL": "http://localhost:5000"
+            },
+            "args": [],
+            "jinja": true,
+            "justMyCode": true,
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Test: Remote",
+            "type": "python",
+            "request": "launch",
+            "program": "test.py",
+            "env": {
+                "baseUrl": "https://home-automation-api-simulator.herokuapp.com"
+            },
             "args": [],
             "jinja": true,
             "justMyCode": true,

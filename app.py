@@ -47,6 +47,8 @@ def downloads(filename):
 @ app.route('/blinds/<deviceId>', methods=['PUT'])
 @ app.route('/coffee/<deviceId>', methods=['PUT'])
 def lights(deviceId):
+    if not deviceId:
+        return 'deviceId missing', 400
     msg = {
         'deviceId': deviceId,
         'control_status': request.json
@@ -57,6 +59,8 @@ def lights(deviceId):
 
 @ app.route('/events/<deviceId>', methods=['GET'])
 def events(deviceId):
+    if not deviceId:
+        return 'deviceId missing', 400    
     session['deviceId'] = deviceId
     print(f'REGISTER pid:{os.getpid()} did:{deviceId}')
     if TEST:
@@ -100,17 +104,19 @@ if TEST:
         return '', 200
 
 def check_messages():
-    message = process_queue.get_message()
-    if message and message['type'] == 'message':
-        msg = json.loads(message['data'])
-        print(f'pid: {os.getpid()} {msg["deviceId"]}: got message')
-        if msg['deviceId'] in thread_queues:
-            print(f'pid: {os.getpid()} {msg["deviceId"]}: dispatched data:{msg["control_status"]}')
-            thread_queues[msg['deviceId']].put(msg)
+    while True:
+        message = process_queue.get_message()
+        if not message: break
+        if message and message['type'] == 'message':
+            msg = json.loads(message['data'])
+            print(f'pid: {os.getpid()} {msg["deviceId"]}: got message')
+            if msg['deviceId'] in thread_queues:
+                print(f'pid: {os.getpid()} {msg["deviceId"]}: dispatched data:{msg["control_status"]}')
+                thread_queues[msg['deviceId']].put(msg)
 
 class RepeatTimer(Timer):
     def run(self):
         while not self.finished.wait(self.interval):
             self.function(*self.args, **self.kwargs)
-message_timer = RepeatTimer(0.01, check_messages)
+message_timer = RepeatTimer(0.1, check_messages)
 message_timer.start()
