@@ -48,30 +48,21 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function connect_ws() {
-    ws = new WebSocket(`ws://${location.host}/events/${deviceId}`)
-    ws.addEventListener('message', msg => {
+    ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/events/${deviceId}`)
+    ws.onopen = () => document.getElementById('status').classList.remove('reconnecting');
+    ws.onmessage = msg => {
         if (msg.data == 'keepalive') return;
-        if (msg.data == 'connected') {
-            document.getElementById('status').classList.remove('reconnecting');
-            return;
-        }
         control_state = { ...control_state, ...JSON.parse(msg.data) };
         update_state(control_state);
-    });
-    ws.addEventListener('close', err => {
+    };
+    ws.onclose = () => {
         document.getElementById('status').textContent = 'Reconnecting...';
         document.getElementById('status').classList.add('reconnecting');
         setTimeout(() => {
             if ([WebSocket.CLOSED, WebSocket.CLOSING].includes(ws.readyState)) connect_ws()
-        }, 5000);        
-    });
+        }, 5000);
+    };
 }
 
-window.addEventListener('beforeunload', () => {
-    if (ws) {
-        ws.close();
-        console.log('Closed websocket');
-    } 
-})
 
 

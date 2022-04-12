@@ -43,7 +43,7 @@ while True:
             pool.submit(post_url,url=f'{baseUrl}/coffee/{deviceId}', json={ "coffee_on": True} )
         except Exception as err:
             print(err)
-    sleep(5)
+    sleep(2)
     for deviceId in deviceIds:
         try:
             pool.submit(post_url,url=f'{baseUrl}/blinds/{deviceId}', json={ "blinds_down": False} )
@@ -51,6 +51,6 @@ while True:
             pool.submit(post_url,url=f'{baseUrl}/coffee/{deviceId}', json={ "coffee_on": False} )
         except Exception as err:
             print(err)
-    sleep(5)
+    sleep(2)
 
 
