@@ -73,18 +73,17 @@ def ws_connect(ws, deviceId):
     while True:
         try:
             msg = thread_queues[deviceId].get(timeout=55)
-            if msg == 'kill':
-                print(f'KILLED pid:{os.getpid()} deviceId:{deviceId}')
-                break
-            print(f'SEND pid:{os.getpid()} deviceId:{deviceId}')
-            ws.send(f'{json.dumps(msg["control_status"])}')
+            if msg == 'kill': break
+            msg = f'{json.dumps(msg["control_status"])}'
         except Empty:
-            try:
-                ws.send('keepalive')
-            except ConnectionClosed as e:
-                thread_queues.pop('deviceId', None)
-                print(f'CLOSED pid:{os.getpid()} deviceId:{deviceId}')
-                raise e
+            msg = 'keepalive'
+        print(f'SEND pid:{os.getpid()} deviceId:{deviceId} Data: {msg}')
+        try:
+            ws.send(msg)
+        except ConnectionClosed as e:
+            thread_queues.pop('deviceId', None)
+            print(f'CLOSED pid:{os.getpid()} deviceId:{deviceId}')
+            raise e
 
 
 if TEST:
