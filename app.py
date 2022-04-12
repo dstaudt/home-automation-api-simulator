@@ -72,7 +72,7 @@ def ws_connect(ws, deviceId):
 
     while True:
         try:
-            msg = thread_queues[deviceId].get(timeout=5)
+            msg = thread_queues[deviceId].get(timeout=55)
             if msg == 'kill':
                 print(f'KILLED pid:{os.getpid()} deviceId:{deviceId}')
                 break
