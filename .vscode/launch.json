@@ -59,7 +59,7 @@
             "request": "launch",
             "program": "test.py",
             "env": {
-                "baseUrl": "https://home-automation-api-simulator.herokuapp.com"
+                "HOME_AUTO_BASEURL": "https://home-automation-api-simulator.herokuapp.com"
             },
             "args": [],
             "jinja": true,
