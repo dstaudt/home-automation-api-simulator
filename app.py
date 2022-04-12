@@ -6,7 +6,6 @@ import json
 import redis
 import os
 import uuid
-from threading import Timer
 from queue import SimpleQueue, Empty
 
 TEST = os.getenv('HOME_AUTO_SIM_TEST') == "True"
@@ -16,9 +15,6 @@ red = redis.Redis.from_url(
     url=os.environ.get('REDIS_URL'),
     db=0
 )
-
-process_queue = red.pubsub()
-process_queue.subscribe('messages')
 
 thread_queues = {}
 
@@ -72,7 +68,7 @@ def ws_connect(ws, deviceId):
 
     while True:
         try:
-            msg = thread_queues[deviceId].get(timeout=55)
+            msg = thread_queues[deviceId].get(timeout=40)
             if msg == 'kill': break
             msg = f'{json.dumps(msg["control_status"])}'
         except Empty:
@@ -99,24 +95,15 @@ if TEST:
         return '', 200
 
 
-def check_messages():
-    while True:
-        message = process_queue.get_message()
-        if not message:
-            break
-        if message['type'] == 'message':
-            msg = json.loads(message['data'])
-            print(f'pid: {os.getpid()} {msg["deviceId"]}: got message Data: {msg}')
-            if msg['deviceId'] in thread_queues:
-                print(f'pid: {os.getpid()} {msg["deviceId"]}: dispatched data:{msg["control_status"]}')
-                thread_queues[msg['deviceId']].put(msg)
+def process_queue_message(message):
+    if message['type'] == 'message':
+        msg = json.loads(message['data'])
+        print(f'pid: {os.getpid()} {msg["deviceId"]}: got message Data: {msg}')
+        if msg['deviceId'] in thread_queues:
+            print(f'pid: {os.getpid()} {msg["deviceId"]}: dispatched data:{msg["control_status"]}')
+            thread_queues[msg['deviceId']].put(msg)
 
+process_queue = red.pubsub()
+process_queue.subscribe(**{'messages': process_queue_message})
+process_queue.run_in_thread(sleep_time=0.1)
 
-class RepeatTimer(Timer):
-    def run(self):
-        while not self.finished.wait(self.interval):
-            self.function(*self.args, **self.kwargs)
-
-
-message_timer = RepeatTimer(0.1, check_messages)
-message_timer.start()
