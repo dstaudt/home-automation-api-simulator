@@ -31,7 +31,9 @@ while True:
     if  len(deviceIds) == len(profiles): break
 
 def post_url(url, json):
-    return requests.put(url=url, json=json, verify=False)
+    resp = requests.put(url=url, json=json, verify=False)
+    print(f'PUT: {url}: Status: {resp.status_code}')
+    return
 
 pool = ThreadPoolExecutor(max_workers=12)
 

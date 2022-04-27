@@ -36,8 +36,9 @@ paths:
       responses:
         '204':
           description: Successful response
-          content:
-            application/json: {}
+        '504':
+          description: Request timed out
+            
   /lights/{deviceId}:
     put:
       tags:
@@ -64,8 +65,9 @@ paths:
       responses:
         '204':
           description: Successful response
-          content:
-            application/json: {}
+        '504':
+          description: Request timed out
+
   /coffee/{deviceId}:
     put:
       tags:
@@ -92,5 +94,5 @@ paths:
       responses:
         '204':
           description: Successful response
-          content:
-            application/json: {}
+        '504':
+          description: Request timed out
