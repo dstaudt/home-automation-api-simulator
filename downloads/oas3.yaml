@@ -1,4 +1,4 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
   title: home-automation-api-simulator
   contact:
@@ -8,7 +8,10 @@ info:
     url: https://es.wikipedia.org/wiki/Licencia_MIT
   version: 1.0.0
 servers:
+  - url: https://home-automation-api-simulator.herokuapp.com/
+    description: Heroku
   - url: http://localhost:5000
+    description: Local Host
 paths:
   /blinds/{deviceId}:
     put:

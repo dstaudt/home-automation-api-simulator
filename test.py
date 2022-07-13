@@ -17,7 +17,7 @@ profiles = [
 ]
 deviceIds = []
 
-resp = requests.get(f'{baseUrl}/startTest', verify=False)
+resp = requests.get(f'{baseUrl}/startTest', verify=True)
 for profile in profiles:
     os.system(f'firefox -p {profile} -width 750 -height 600 -new-tab {baseUrl} &')
     sleep(2)
