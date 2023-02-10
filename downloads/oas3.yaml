@@ -8,8 +8,6 @@ info:
     url: https://es.wikipedia.org/wiki/Licencia_MIT
   version: 1.0.0
 servers:
-  - url: https://home-automation-api-simulator.herokuapp.com/
-    description: Heroku
   - url: http://localhost:5000
     description: Local Host
 paths:

@@ -1,4 +1,3 @@
-from concurrent.futures import thread
 from email import message
 from flask import Flask, render_template, request, send_from_directory, session
 from flask_cors import CORS
@@ -15,12 +14,6 @@ import logging
 TEST = os.getenv('HOME_AUTO_SIM_TEST') == "True"
 LOG_LEVEL = os.getenv('HOME_AUTO_SIM_LOG')
 logging.basicConfig(format='%(asctime)s %(message)s', level=LOG_LEVEL if LOG_LEVEL else logging.WARN)
-
-red = redis.Redis.from_url(
-    decode_responses=True,
-    url=os.environ.get('REDIS_URL'),
-    db=0
-)
 
 thread_queues = {}
 thread_commands = {}
@@ -46,7 +39,7 @@ def downloads(filename):
         'downloads',
         filename,
         as_attachment=True,
-        attachment_filename=filename,
+        download_filename=filename,
         mimetype='application/octet-stream')
 
 
@@ -80,7 +73,6 @@ def ws_connect(ws, deviceId):
     thread_queues[deviceId] = SimpleQueue()
 
     while True:
-        messageId=None
         try:
             msg = thread_queues[deviceId].get(timeout=40)
             if msg == 'kill': break
@@ -127,6 +119,11 @@ def process_queue_responses(message):
         logging.debug(f'pid: {os.getpid()} {msg["deviceId"]}: ack for messageId: {msg["messageId"]}')
         thread_commands[msg['messageId']].set()
 
+red = redis.Redis.from_url(
+    decode_responses=True,
+    url=os.environ.get('REDIS_URL'),
+    db=0
+)
 process_queue = red.pubsub()
 process_queue.subscribe(**{'messages': process_queue_messages})
 process_queue.subscribe(**{'responses': process_queue_responses})
