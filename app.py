@@ -39,7 +39,7 @@ def downloads(filename):
         'downloads',
         filename,
         as_attachment=True,
-        download_filename=filename,
+        # download_filename=filename,
         mimetype='application/octet-stream')
 
 

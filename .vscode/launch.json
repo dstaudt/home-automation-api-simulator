@@ -8,7 +8,7 @@
             "module": "flask",
             "env": {
                 "FLASK_APP": "app.py",
-                "HOME_AUTO_SIM_TEST": "True",
+                "HOME_AUTO_SIM_TEST": "False",
                 "HOME_AUTO_SIM_LOG": "DEBUG",
                 "HOME_AUTO_SECRET_KEY": "7fc2b780-6852-4e8c-9332-f869dc940b78",
                 "FLASK_ENV": "development",
@@ -19,7 +19,7 @@
                 // "--cert=adhoc", // Create cert on-the-fly - HTTPS needed for clipboard copy
             ],
             "jinja": true,
-            "justMyCode": true
+            "justMyCode": false
         },
         {
             "name": "Server: Gunicorn",
